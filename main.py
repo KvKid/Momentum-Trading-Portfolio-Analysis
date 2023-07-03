@@ -1,11 +1,9 @@
-# %% [markdown]
-# This program implements a basic momentum-based portfolio trading strategy in Python, using the yfinance package to fetch historical data from Yahoo Finance, and pandas and numpy for data manipulation.
-
-# %%
 import pandas as pd
 import numpy as np
 import yfinance as yf
 import datetime as dt
+import matplotlib.pyplot as plt
+import empyrical
 
 # Define the list of stocks in your portfolio
 stocks = ['AAPL', 'MSFT', 'AMZN', 'GOOG', 'META']
@@ -19,20 +17,10 @@ data = yf.download(stocks, start=start_date, end=end_date)['Close']
 sp500 = yf.download('^GSPC', start=start_date, end=end_date)
 
 
-# %% [markdown]
-# Need to resample the data to monthly frequency using forward filling to fill any missing values. Then, it calculates the percentage change in the prices to get the returns.
-
-# %%
 # Calculate the monthly price of the stocks
 data_monthly = data.resample('M').ffill() # Use forward filling
 returns = data_monthly.pct_change()
 
-# %% [markdown]
-# The 'calculate_momentum' function takes two input parameters, 'x' and 'period'. It calculates the momentum value of a given series 'x' by dividing the value of 'x' at a specific time period with the value of 'x' at a shifted time period. It then subtracts 1 from the result and returns the momentum value.
-# 
-# The 'calculate_portfolio_weights' function takes a DataFrame 'df' as input. It calculates the ranks of each stock in 'df' based on their momentum. It creates a mask of stocks to be included in the portfolio by checking which stocks have ranks less than or equal to 3. It then calculates the portfolio weights by dividing the mask by the sum of the mask along the rows. Finally, it returns the portfolio weights.
-
-# %%
 # Function to calculate momentum
 def calculate_momentum(x, period):
     return (x.shift() / x.shift(period)) - 1
@@ -49,13 +37,6 @@ def calculate_portfolio_weights(df):
     portfolio_weights = mask.divide(mask.sum(axis=1), axis=0)
     return portfolio_weights
 
-# %% [markdown]
-# 
-# We calculate the portfolio returns based on the momentum of stocks. We first apply the momentum function to the returns of stocks using a specific time period. Then, we calculate the portfolio weights based on the ranks of stocks' momentum. Finally, we calculate the portfolio returns by multiplying the portfolio weights with the returns and summing them along the rows. The resulting portfolio returns are printed.
-# 
-
-# %%
-
 # Apply the momentum function to the returns
 momentum = returns.apply(calculate_momentum, args=(6,))
 
@@ -64,14 +45,6 @@ portfolio_weights = calculate_portfolio_weights(momentum)
 
 # Calculate portfolio returns
 portfolio_returns = (portfolio_weights * returns).sum(axis=1)
-
-
-# %% [markdown]
-# Finds the rolling Sharpe Ratio and maximum drawdown over a 12 month period, and the cumulative return of the portfolio.
-
-# %%
-import matplotlib.pyplot as plt
-import empyrical
 
 # Calculate rolling metrics
 window =   12
